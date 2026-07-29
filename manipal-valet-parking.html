@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manipal Hospitals — Valet Parking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-900:#082B49;
+    --blue-800:#0A3D62;
+    --blue-700:#0F5182;
+    --teal-600:#0FA3A3;
+    --teal-500:#20BCBC;
+    --teal-100:#E1F6F5;
+    --bg:#F2F7F8;
+    --surface:#FFFFFF;
+    --ink:#0F2A38;
+    --muted:#5B7A87;
+    --line:#DCE7EA;
+    --amber:#C97A1F;
+    --amber-bg:#FCF1E1;
+    --red:#C43D3D;
+    --red-bg:#FBEAEA;
+    --green:#218A5A;
+    --green-bg:#E7F6EE;
+    --radius:16px;
+    --radius-sm:10px;
+    --shadow:0 1px 2px rgba(10,61,98,.06), 0 8px 24px -12px rgba(10,61,98,.18);
+    font-family:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+  #app{min-height:100vh;}
+  h1,h2,h3,.display{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  button{font-family:inherit;cursor:pointer;}
+  input{font-family:inherit;}
+  a{color:inherit;}
+
+  /* ---------- Shared bits ---------- */
+  .wrap{max-width:480px;margin:0 auto;padding:0 20px 40px;}
+  .wrap-wide{max-width:1080px;margin:0 auto;padding:0 24px 48px;}
+  .brandbar{display:flex;align-items:center;gap:10px;padding:18px 20px;}
+  .brandmark{width:34px;height:34px;border-radius:9px;background:linear-gradient(155deg,var(--blue-800),var(--teal-600));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .brandmark svg{width:18px;height:18px;}
+  .brandname{font-family:'Manrope',sans-serif;font-weight:800;font-size:15.5px;color:var(--blue-900);line-height:1.15;}
+  .brandsub{font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:600;}
+
+  .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;border:1px solid var(--line);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:14px 20px;font-weight:700;font-size:15px;width:100%;transition:transform .12s ease, opacity .12s ease;}
+  .btn:active{transform:scale(.98);}
+  .btn-primary{background:var(--blue-800);color:#fff;}
+  .btn-primary:hover{background:var(--blue-700);}
+  .btn-teal{background:var(--teal-600);color:#fff;}
+  .btn-teal:hover{background:var(--teal-500);}
+  .btn-outline{background:transparent;color:var(--blue-800);border:1.5px solid var(--line);}
+  .btn-outline:hover{border-color:var(--blue-800);}
+  .btn-ghost{background:transparent;color:var(--muted);font-weight:600;padding:8px;}
+  .btn:disabled{opacity:.45;pointer-events:none;}
+  .btn-sm{width:auto;padding:9px 14px;font-size:13px;border-radius:9px;}
+
+  .field-label{font-size:12.5px;font-weight:700;color:var(--blue-900);margin-bottom:7px;display:block;letter-spacing:.01em;}
+  .input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px 15px;font-size:16px;color:var(--ink);background:#fff;outline:none;transition:border-color .12s ease;}
+  .input:focus{border-color:var(--teal-600);}
+  .input-otp{letter-spacing:.5em;font-family:'IBM Plex Mono',monospace;font-size:22px;text-align:center;font-weight:600;}
+  .err{color:var(--red);font-size:13px;font-weight:600;margin-top:8px;}
+  .helper{color:var(--muted);font-size:12.5px;margin-top:8px;line-height:1.5;}
+
+  .demo-banner{background:var(--teal-100);border:none;color:#0C7A7A;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:600;margin-bottom:18px;line-height:1.5;}
+  .demo-banner b{font-family:'IBM Plex Mono',monospace;font-size:15px;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:100px;letter-spacing:.02em;}
+  .badge-booked{background:#E9EEF3;color:var(--blue-700);}
+  .badge-parked{background:var(--teal-100);color:#0C7A7A;}
+  .badge-requested{background:var(--amber-bg);color:var(--amber);}
+  .badge-retrieved{background:var(--green-bg);color:var(--green);}
+  .badge-overstay{background:var(--red-bg);color:var(--red);}
+
+  .footer-link{text-align:center;padding:26px 20px 10px;}
+  .footer-link button{background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
+
+  /* ---------- Entry ---------- */
+  .entry-wrap{max-width:420px;margin:0 auto;padding:60px 20px 8px;text-align:center;}
+  .entry-mark{width:60px;height:60px;border-radius:16px;background:linear-gradient(155deg,var(--blue-800),var(--teal-600));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:var(--shadow);}
+  .entry-mark svg{width:30px;height:30px;}
+  .entry-brand{font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .entry-title{font-size:29px;color:var(--blue-900);margin:0 0 32px;}
+
+  /* ---------- Steps ---------- */
+  .step-head{margin-bottom:22px;}
+  .step-eyebrow{font-size:11.5px;font-weight:700;color:var(--teal-600);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+  .step-head h2{font-size:20px;color:var(--blue-900);margin:0 0 4px;}
+  .step-head p{color:var(--muted);font-size:13.5px;margin:0;line-height:1.5;}
+  .back-row{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:600;margin-bottom:16px;cursor:pointer;width:fit-content;}
+
+  /* ---------- Ticket / confirmation ---------- */
+  .ticket{background:linear-gradient(155deg,var(--blue-800),var(--blue-900));border-radius:var(--radius);padding:28px 24px 22px;color:#fff;position:relative;overflow:hidden;}
+  .ticket:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% -10%, rgba(32,188,188,.35), transparent 55%);}
+  .ticket-eyebrow{font-size:11.5px;font-weight:700;color:#9FD8D8;text-transform:uppercase;letter-spacing:.09em;position:relative;}
+  .ticket-zone{font-family:'Manrope',sans-serif;font-weight:800;font-size:17px;margin-top:10px;position:relative;}
+  .ticket-slot{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:54px;letter-spacing:.02em;margin:6px 0 4px;position:relative;}
+  .ticket-hint{font-size:12.5px;color:#C9DEE6;position:relative;line-height:1.5;}
+  .ticket-dash{border-top:2px dashed rgba(255,255,255,.25);margin:20px -24px 16px;position:relative;}
+  .ticket-row{display:flex;justify-content:space-between;font-size:12px;color:#B7CCD4;position:relative;margin-bottom:5px;}
+  .ticket-row b{color:#fff;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+
+  .tracker{margin-top:20px;}
+  .tstep{display:flex;gap:12px;padding:11px 0;}
+  .tdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-top:1px;}
+  .tdot.done{background:var(--teal-600);color:#fff;}
+  .tdot.current{background:#fff;border:2.5px solid var(--teal-600);color:var(--teal-600);}
+  .tdot.pending{background:#EDF3F4;color:#B6C6CC;}
+  .tline{width:2px;flex:1;background:var(--line);margin:2px 0 -13px 10.5px;position:relative;left:0;}
+  .tlabel{font-weight:700;font-size:13.5px;color:var(--ink);}
+  .tlabel.pending{color:#A7BAC1;}
+  .ttime{font-size:11.5px;color:var(--muted);margin-top:1px;}
+
+  /* ---------- Staff login ---------- */
+  .login-wrap{max-width:380px;margin:60px auto;padding:0 20px;}
+  .cred-hint{background:var(--teal-100);border-radius:10px;padding:10px 13px;font-size:12px;color:#0C7A7A;margin-top:16px;line-height:1.6;}
+  .cred-hint b{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Staff portal ---------- */
+  .staffbar{background:var(--blue-900);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .staffbar .brandname{color:#fff;}
+  .staffbar .brandsub{color:#8FB6C4;}
+  .staff-actions{display:flex;gap:10px;align-items:center;}
+  .staff-actions button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;}
+  .staff-actions button:hover{background:rgba(255,255,255,.18);}
+  .tabbar{display:flex;gap:6px;background:#fff;border-bottom:1px solid var(--line);padding:0 24px;}
+  .tabbtn{background:none;border:none;padding:15px 6px;margin-right:22px;font-weight:700;font-size:14px;color:var(--muted);border-bottom:2.5px solid transparent;}
+  .tabbtn.active{color:var(--blue-800);border-color:var(--teal-600);}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0 16px;}
+  .chip{border:1.5px solid var(--line);background:#fff;padding:7px 13px;border-radius:100px;font-size:12.5px;font-weight:700;color:var(--muted);}
+  .chip.active{background:var(--blue-800);border-color:var(--blue-800);color:#fff;}
+  .search-input{flex:1;min-width:180px;border:1.5px solid var(--line);border-radius:100px;padding:9px 16px;font-size:13.5px;background:#fff;}
+
+  .alert-panel{background:var(--red-bg);border:1px solid #F0C7C7;border-radius:14px;padding:16px 18px;margin-bottom:20px;}
+  .alert-panel h3{color:var(--red);font-size:14px;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
+  .alert-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #F0C7C7;font-size:13px;}
+  .alert-row:first-of-type{border-top:none;}
+
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 14px;background:#F7FAFB;border-bottom:1px solid var(--line);}
+  td{padding:13px 14px;font-size:13.5px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr.row-overstay{background:var(--red-bg);}
+  .cell-slot{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue-800);}
+  .cell-name{font-weight:600;}
+  .cell-sub{color:var(--muted);font-size:12px;margin-top:1px;}
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px;}
+  .stat-card{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);}
+  .stat-card b{display:block;font-family:'Manrope',sans-serif;font-size:26px;color:var(--blue-900);}
+  .stat-card span{font-size:12px;color:var(--muted);font-weight:600;}
+
+  .zone-bars{background:#fff;border-radius:14px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;}
+  .zone-bar-row{margin-bottom:14px;}
+  .zone-bar-row:last-child{margin-bottom:0;}
+  .zbr-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
+  .zbr-top b{font-weight:700;}
+  .zbr-track{height:8px;background:#EEF3F5;border-radius:100px;overflow:hidden;}
+  .zbr-fill{height:100%;background:linear-gradient(90deg,var(--teal-600),var(--blue-700));border-radius:100px;}
+
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+  .metric-card{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);}
+  .metric-card .m-label{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px;}
+  .metric-card .m-value{font-family:'Manrope',sans-serif;font-size:22px;color:var(--blue-900);}
+  .metric-card .m-sub{font-size:11px;color:#9FB3BC;margin-top:4px;}
+
+  .dur-table td, .dur-table th{font-size:12.5px;}
+  .modal-row{display:flex;gap:10px;margin-top:10px;}
+  .inline-input{border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13.5px;flex:1;}
+
+  @media(max-width:720px){
+    table thead{display:none;}
+    table, tbody, tr, td{display:block;width:100%;}
+    tr{border-bottom:1px solid var(--line);padding:12px 14px;}
+    td{border:none;padding:3px 0;}
+    td:before{content:attr(data-label);font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:700;display:block;letter-spacing:.04em;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================= CONFIG ============================= */
+const STORAGE_KEY = 'manipal-valet-bookings-v1';
+const ZONES = [
+  {code:'T1', label:'Tower 1', capacity:20},
+  {code:'T2', label:'Tower 2', capacity:20},
+  {code:'BA', label:'Block A', capacity:20},
+  {code:'BB', label:'Block B', capacity:15},
+  {code:'BC', label:'Block C', capacity:15},
+];
+const TOTAL_CAPACITY = ZONES.reduce((s,z)=>s+z.capacity,0);
+const OVERSTAY_MS = 24*60*60*1000;
+const STAFF_USER = 'security';
+const STAFF_PIN = '1234';
+
+/* ============================= STATE ============================= */
+let state = {
+  view: 'patient',            // patient | staffLogin | staffPortal
+  patientStep: 'mobile',      // mobile | otp | name | confirmed | full
+  mobile: '', otp: '', otpErr: '', nameErr: '',
+  currentBookingId: null,
+  staffTab: 'ops',
+  staffErr: '',
+  zoneFilter: 'ALL',
+  searchQ: '',
+  showCompleted: false,
+  checkinFor: null,           // booking id currently showing car-number input
+  bookings: [],
+  loaded: false,
+};
+
+let _otpMemo = '';
+
+/* ============================= STORAGE ============================= */
+// Uses Claude's window.storage when this runs inside a Claude.ai preview.
+// Falls back to localStorage automatically when deployed standalone (e.g. on Vercel),
+// so the same file works in both places without edits.
+const HAS_CLAUDE_STORAGE = (typeof window !== 'undefined') && !!window.storage;
+async function storageGet(key){
+  if(HAS_CLAUDE_STORAGE){
+    try{ return await window.storage.get(key, true); } catch(e){ return null; }
+  }
+  const raw = localStorage.getItem(key);
+  return raw ? { key, value: raw } : null;
+}
+async function storageSet(key, value){
+  if(HAS_CLAUDE_STORAGE){
+    try{ return await window.storage.set(key, value, true); } catch(e){ return null; }
+  }
+  localStorage.setItem(key, value);
+  return { key, value };
+}
+
+async function loadBookings(){
+  const res = await storageGet(STORAGE_KEY);
+  state.bookings = res && res.value ? JSON.parse(res.value) : [];
+  if(state.bookings.length === 0){
+    state.bookings = seedDemoData();
+    await saveBookings();
+  }
+  state.loaded = true;
+}
+async function saveBookings(){
+  await storageSet(STORAGE_KEY, JSON.stringify(state.bookings));
+}
+async function refreshFromStorage(){
+  const res = await storageGet(STORAGE_KEY);
+  if(res && res.value) state.bookings = JSON.parse(res.value);
+  render();
+}
+
+/* ============================= HELPERS ============================= */
+function uid(){ return 'BK' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,5).toUpperCase(); }
+function zoneOf(code){ return ZONES.find(z=>z.code===code); }
+function activeStatuses(){ return ['booked','parked','requested']; }
+
+function assignSlot(bookings){
+  let best = null;
+  for(const z of ZONES){
+    const activeInZone = bookings.filter(b=>b.zoneCode===z.code && activeStatuses().includes(b.status));
+    const free = z.capacity - activeInZone.length;
+    if(free > 0 && (!best || free > best.free)){ best = {zone:z, free, activeInZone}; }
+  }
+  if(!best) return null;
+  const used = new Set(best.activeInZone.map(b=>parseInt(b.slotLabel.split('-')[1],10)));
+  let n=1; while(used.has(n)) n++;
+  return { zoneCode: best.zone.code, zoneLabel: best.zone.label, slotLabel: `${best.zone.code}-${String(n).padStart(2,'0')}` };
+}
+
+function fmtTime(ts){ if(!ts) return '—'; return new Date(ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDateTime(ts){ if(!ts) return '—'; const d=new Date(ts); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ', ' + fmtTime(ts); }
+function fmtDur(ms){
+  if(ms == null || ms < 0) return '—';
+  const mins = Math.round(ms/60000);
+  if(mins < 60) return mins + 'm';
+  const h = Math.floor(mins/60), m = mins%60;
+  if(h < 24) return h+'h '+m+'m';
+  const d = Math.floor(h/24), rh = h%24;
+  return d+'d '+rh+'h';
+}
+function isOverstay(b){
+  return (b.status==='parked'||b.status==='requested') && b.tParked && (Date.now()-b.tParked) > OVERSTAY_MS;
+}
+function maskMobile(m){ return m ? m.slice(0,2)+'••••'+m.slice(-4) : ''; }
+
+function seedDemoData(){
+  const now = Date.now();
+  return [
+    {id:'SEED1', mobile:'9876543210', name:'Ramesh Kumar', zoneCode:'T1', zoneLabel:'Tower 1', slotLabel:'T1-03',
+     carNumber:'KA 01 AB 1234', status:'retrieved',
+     tBooked:now-5*3600000, tParked:now-4*3600000-40*60000, tRequested:now-2*3600000-10*60000, tRetrieved:now-2*3600000},
+    {id:'SEED2', mobile:'9845012345', name:'Priya Nair', zoneCode:'T2', zoneLabel:'Tower 2', slotLabel:'T2-11',
+     carNumber:'KA 05 CD 5678', status:'retrieved',
+     tBooked:now-8*3600000, tParked:now-7*3600000-45*60000, tRequested:now-3*3600000, tRetrieved:now-2*3600000-55*60000},
+    {id:'SEED3', mobile:'9900112233', name:'Suresh Babu', zoneCode:'BA', zoneLabel:'Block A', slotLabel:'BA-02',
+     carNumber:'KA 03 EF 9988', status:'parked',
+     tBooked:now-30*3600000, tParked:now-29*3600000-40*60000, tRequested:null, tRetrieved:null},
+    {id:'SEED4', mobile:'9911223344', name:'Anita Rao', zoneCode:'BB', zoneLabel:'Block B', slotLabel:'BB-05',
+     carNumber:null, status:'booked',
+     tBooked:now-5*60000, tParked:null, tRequested:null, tRetrieved:null},
+    {id:'SEED5', mobile:'9922334455', name:'Vikram Shetty', zoneCode:'BC', zoneLabel:'Block C', slotLabel:'BC-01',
+     carNumber:'KA 09 GH 4455', status:'requested',
+     tBooked:now-3*3600000, tParked:now-2*3600000-50*60000, tRequested:now-10*60000, tRetrieved:null},
+    {id:'SEED6', mobile:'9933445566', name:'Meera Iyer', zoneCode:'T1', zoneLabel:'Tower 1', slotLabel:'T1-08',
+     carNumber:'KA 02 IJ 7766', status:'parked',
+     tBooked:now-50*60000, tParked:now-45*60000, tRequested:null, tRetrieved:null},
+  ];
+}
+
+/* ============================= ICONS ============================= */
+const ICON = {
+  cross: `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>`,
+  car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M5 17h14M6 17v2M18 17v2M4 11l1.6-4.8A2 2 0 0 1 7.5 5h9a2 2 0 0 1 1.9 1.2L20 11M4 11h16v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-5Z"/></svg>`,
+  alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a1.5 1.5 0 0 0 1.3 2.2h17.4A1.5 1.5 0 0 0 22 18L13.7 3.9a1.5 1.5 0 0 0-2.6 0Z"/></svg>`,
+};
+
+/* ============================= BRANDBAR ============================= */
+function brandbar(dark){
+  return `<div class="brandbar">
+    <div class="brandmark">${ICON.cross}</div>
+    <div>
+      <div class="brandname" style="${dark?'color:#fff':''}">Manipal Hospitals</div>
+      <div class="brandsub">Valet Parking</div>
+    </div>
+  </div>`;
+}
+
+/* ============================= PATIENT: ENTRY (brand + login) ============================= */
+function renderMobile(){
+  return `
+  <div class="entry-wrap">
+    <div class="entry-mark">${ICON.cross}</div>
+    <div class="entry-brand">Manipal Hospitals</div>
+    <h1 class="entry-title display">Valet Parking</h1>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <label class="field-label">Mobile number</label>
+      <input class="input" id="mobileInput" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" value="${state.mobile}" autofocus>
+      <div class="err" id="mobileErr" style="display:none;"></div>
+      <button class="btn btn-primary" id="btnSendOtp" style="margin-top:18px;">Send OTP</button>
+    </div>
+  </div>
+  <div class="footer-link"><button id="btnStaffLink">Hospital Staff / Security Login →</button></div>
+  `;
+}
+
+/* ============================= PATIENT: OTP ============================= */
+function renderOtp(){
+  return `
+  ${brandbar(false)}
+  <div class="wrap">
+    <div class="back-row" id="btnBackMobile">← Change number</div>
+    <div class="card">
+      <div class="step-head">
+        <div class="step-eyebrow">Step 2 of 3</div>
+        <h2>Enter OTP</h2>
+        <p>Sent to +91 ${state.mobile}</p>
+      </div>
+      <div class="demo-banner">Demo mode — SMS gateway not connected yet.<br>Your OTP is <b>${_otpMemo}</b></div>
+      <label class="field-label">4-digit code</label>
+      <input class="input input-otp" id="otpInput" type="tel" inputmode="numeric" maxlength="4" placeholder="0000">
+      <div class="err" id="otpErr" style="display:${state.otpErr?'block':'none'};">${state.otpErr}</div>
+      <button class="btn btn-primary" id="btnVerifyOtp" style="margin-top:18px;">Verify &amp; Continue</button>
+      <button class="btn btn-ghost" id="btnResendOtp" style="margin-top:4px;">Resend code</button>
+    </div>
+  </div>
+  `;
+}
+
+/* ============================= PATIENT: NAME ============================= */
+function renderName(){
+  return `
+  ${brandbar(false)}
+  <div class="wrap">
+    <div class="back-row" id="btnBackOtp">← Back</div>
+    <div class="card">
+      <div class="step-head">
+        <div class="step-eyebrow">Step 3 of 3</div>
+        <h2>Patient details</h2>
+        <p>This helps our valet team identify you at pickup.</p>
+      </div>
+      <label class="field-label">Patient name</label>
+      <input class="input" id="nameInput" type="text" placeholder="Full name" value="${state.mobile ? '' : ''}">
+      <div class="err" id="nameErr" style="display:none;"></div>
+      <label class="field-label" style="margin-top:16px;">Mobile number</label>
+      <input class="input" value="+91 ${state.mobile}" disabled style="background:#F5F8F9;color:var(--muted);">
+      <button class="btn btn-primary" id="btnConfirmBooking" style="margin-top:18px;">Confirm Booking</button>
+    </div>
+  </div>
+  `;
+}
+
+/* ============================= PATIENT: FULL ============================= */
+function renderFull(){
+  return `
+  ${brandbar(false)}
+  <div class="wrap">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:34px;">🅿️</div>
+      <h2 style="margin-top:8px;">All slots are full</h2>
+      <p style="color:var(--muted);font-size:13.5px;">Every zone is at capacity right now. Please check with the valet desk at the main entrance for assistance.</p>
+      <button class="btn btn-outline" id="btnBackLanding2" style="margin-top:14px;">← Back to start</button>
+    </div>
+  </div>
+  `;
+}
+
+/* ============================= PATIENT: CONFIRMED / TRACKER ============================= */
+function trackerStep(dot, label, time, state_){
+  const dotClass = state_==='done'?'done':state_==='current'?'current':'pending';
+  return `<div class="tstep">
+    <div>
+      <div class="tdot ${dotClass}">${state_==='done'?ICON.check:dot}</div>
+      ${state_!=='last' ? '<div class="tline"></div>' : ''}
+    </div>
+    <div style="flex:1;">
+      <div class="tlabel ${state_==='pending'?'pending':''}">${label}</div>
+      <div class="ttime">${time || (state_==='current' ? 'In progress' : 'Waiting')}</div>
+    </div>
+  </div>`;
+}
+function renderConfirmed(){
+  const b = state.bookings.find(x=>x.id===state.currentBookingId);
+  if(!b) return renderMobile();
+  const stageIdx = {booked:0, parked:1, requested:2, retrieved:3}[b.status];
+  return `
+  ${brandbar(false)}
+  <div class="wrap">
+    <div class="ticket">
+      <div class="ticket-eyebrow">${b.status==='retrieved' ? 'Trip complete' : 'Your valet ticket'}</div>
+      <div class="ticket-zone">${b.zoneLabel}</div>
+      <div class="ticket-slot">${b.slotLabel}</div>
+      <div class="ticket-hint">${b.status==='booked' ? 'Show this number to the valet security at ' + b.zoneLabel : b.status==='retrieved' ? 'Thank you for visiting Manipal Hospitals. Drive safe.' : 'Your vehicle is in our care.'}</div>
+      <div class="ticket-dash"></div>
+      <div class="ticket-row"><span>Booking ID</span><b>${b.id}</b></div>
+      <div class="ticket-row"><span>Patient</span><b style="font-family:'Inter',sans-serif;">${b.name}</b></div>
+      <div class="ticket-row"><span>Car number</span><b>${b.carNumber || 'Pending check-in'}</b></div>
+    </div>
+
+    <div class="card tracker">
+      ${trackerStep('1','Booking confirmed', fmtTime(b.tBooked), stageIdx>=0 ? (stageIdx>0?'done':'current') : 'pending')}
+      ${trackerStep('2','Car parked by valet', fmtTime(b.tParked), stageIdx>=1 ? (stageIdx>1?'done':'current') : 'pending')}
+      ${trackerStep('3','Retrieval requested', fmtTime(b.tRequested), stageIdx>=2 ? (stageIdx>2?'done':'current') : 'pending')}
+      ${trackerStep('4','Car returned to you', fmtTime(b.tRetrieved), stageIdx>=3 ? 'done' : 'pending')}
+    </div>
+
+    ${b.status==='parked' ? `<button class="btn btn-teal" id="btnRequestCar" style="margin-top:16px;">${ICON.car} Request My Car</button>` : ''}
+    ${b.status==='requested' ? `<div class="card" style="margin-top:16px;text-align:center;color:var(--muted);font-size:13.5px;">A valet has been notified and is bringing your car around.</div>` : ''}
+    ${b.status==='retrieved' ? `<button class="btn btn-outline" id="btnNewBooking" style="margin-top:16px;">Start a new booking</button>` : ''}
+    ${b.status==='booked' ? `<div class="helper" style="text-align:center;margin-top:14px;">Refreshes automatically once the valet checks your car in.</div>` : ''}
+  </div>
+  `;
+}
+
+/* ============================= PATIENT ROOT ============================= */
+function renderPatient(){
+  switch(state.patientStep){
+    case 'mobile': return renderMobile();
+    case 'otp': return renderOtp();
+    case 'name': return renderName();
+    case 'confirmed': return renderConfirmed();
+    case 'full': return renderFull();
+    default: return renderMobile();
+  }
+}
+
+/* ============================= STAFF LOGIN ============================= */
+function renderStaffLogin(){
+  return `
+  <div class="login-wrap">
+    ${brandbar(false)}
+    <div class="card" style="margin-top:10px;">
+      <div class="step-head">
+        <div class="step-eyebrow">Restricted access</div>
+        <h2>Staff &amp; Security Login</h2>
+        <p>This portal is separate from the patient booking flow and is not reachable from the QR code.</p>
+      </div>
+      <label class="field-label">Staff ID</label>
+      <input class="input" id="staffUser" type="text" placeholder="Staff ID">
+      <label class="field-label" style="margin-top:14px;">PIN</label>
+      <input class="input" id="staffPin" type="password" placeholder="4-digit PIN" maxlength="4">
+      <div class="err" id="staffErr" style="display:${state.staffErr?'block':'none'};">${state.staffErr}</div>
+      <button class="btn btn-primary" id="btnStaffLogin" style="margin-top:18px;">Log In</button>
+      <div class="cred-hint">Prototype credentials — Staff ID: <b>${STAFF_USER}</b> · PIN: <b>${STAFF_PIN}</b><br>Replace with real hospital staff directory / SSO before production use.</div>
+    </div>
+    <div class="footer-link"><button id="btnBackToPatient">← Back to patient booking</button></div>
+  </div>
+  `;
+}
+
+/* ============================= STAFF: OPERATIONS ============================= */
+function filteredBookings(){
+  let list = state.bookings.slice().sort((a,b)=>b.tBooked-a.tBooked);
+  if(state.zoneFilter !== 'ALL') list = list.filter(b=>b.zoneCode===state.zoneFilter);
+  if(!state.showCompleted) list = list.filter(b=>b.status!=='retrieved');
+  if(state.searchQ.trim()){
+    const q = state.searchQ.trim().toLowerCase();
+    list = list.filter(b => (b.name||'').toLowerCase().includes(q) || (b.mobile||'').includes(q) || (b.carNumber||'').toLowerCase().includes(q) || (b.slotLabel||'').toLowerCase().includes(q));
+  }
+  return list;
+}
+function statusBadge(b){
+  if(isOverstay(b)) return `<span class="badge badge-overstay">${ICON.alert} Overstay</span>`;
+  const map = {booked:['badge-booked','Booked'], parked:['badge-parked','Parked'], requested:['badge-requested','Requested'], retrieved:['badge-retrieved','Retrieved']};
+  const [cls,label] = map[b.status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function actionCell(b){
+  if(b.status==='booked'){
+    if(state.checkinFor === b.id){
+      return `<div class="modal-row">
+        <input class="inline-input" id="carNumInput" placeholder="Car number" style="text-transform:uppercase;">
+        <button class="btn btn-teal btn-sm" id="btnConfirmCheckin" data-id="${b.id}">Save</button>
+        <button class="btn btn-ghost btn-sm" id="btnCancelCheckin">Cancel</button>
+      </div>`;
+    }
+    return `<button class="btn btn-outline btn-sm" data-action="startCheckin" data-id="${b.id}">Check In</button>`;
+  }
+  if(b.status==='parked') return `<button class="btn btn-outline btn-sm" data-action="checkout" data-id="${b.id}">Check Out</button>`;
+  if(b.status==='requested') return `<button class="btn btn-teal btn-sm" data-action="checkout" data-id="${b.id}">Retrieve &amp; Check Out</button>`;
+  return `<span style="color:var(--muted);font-size:12.5px;">Done</span>`;
+}
+function renderOps(){
+  const list = filteredBookings();
+  const overstayCount = state.bookings.filter(isOverstay).length;
+  return `
+  <div class="wrap-wide">
+    ${overstayCount ? `<div class="alert-panel">
+      <h3>${ICON.alert} ${overstayCount} vehicle${overstayCount>1?'s':''} parked over 24 hours</h3>
+      ${state.bookings.filter(isOverstay).map(b=>`
+        <div class="alert-row">
+          <span><b>${b.slotLabel}</b> — ${b.carNumber || '—'} · ${b.name}</span>
+          <span>${fmtDur(Date.now()-b.tParked)} parked</span>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div class="toolbar">
+      <div class="chip ${state.zoneFilter==='ALL'?'active':''}" data-zone="ALL">All zones</div>
+      ${ZONES.map(z=>`<div class="chip ${state.zoneFilter===z.code?'active':''}" data-zone="${z.code}">${z.label}</div>`).join('')}
+      <input class="search-input" id="searchInput" placeholder="Search name, mobile, car, slot…" value="${state.searchQ}">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap;">
+        <input type="checkbox" id="showCompleted" ${state.showCompleted?'checked':''}> Show completed
+      </label>
+    </div>
+
+    ${list.length===0 ? `<div class="empty">No bookings match this view.</div>` : `
+    <table>
+      <thead><tr><th>Slot</th><th>Patient</th><th>Car</th><th>Status</th><th>Booked</th><th>Duration</th><th>Action</th></tr></thead>
+      <tbody>
+        ${list.map(b=>`
+          <tr class="${isOverstay(b)?'row-overstay':''}">
+            <td data-label="Slot"><span class="cell-slot">${b.slotLabel}</span><div class="cell-sub">${b.zoneLabel}</div></td>
+            <td data-label="Patient"><span class="cell-name">${b.name}</span><div class="cell-sub">${b.mobile}</div></td>
+            <td data-label="Car">${b.carNumber || '<span style="color:var(--muted);">—</span>'}</td>
+            <td data-label="Status">${statusBadge(b)}</td>
+            <td data-label="Booked">${fmtDateTime(b.tBooked)}</td>
+            <td data-label="Duration">${b.tParked ? fmtDur((b.tRetrieved||Date.now())-b.tParked) : '—'}</td>
+            <td data-label="Action">${actionCell(b)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`}
+  </div>
+  `;
+}
+
+/* ============================= STAFF: DASHBOARD ============================= */
+function renderDashboard(){
+  const active = state.bookings.filter(b=>activeStatuses().includes(b.status));
+  const occupied = active.length;
+  const avail = TOTAL_CAPACITY - occupied;
+  const utilPct = Math.round((occupied/TOTAL_CAPACITY)*100);
+
+  const parkedTimes = state.bookings.filter(b=>b.tParked).map(b=>b.tParked-b.tBooked);
+  const avgToPark = parkedTimes.length ? parkedTimes.reduce((a,c)=>a+c,0)/parkedTimes.length : null;
+
+  const retrievalTimes = state.bookings.filter(b=>b.tRequested && b.tRetrieved).map(b=>b.tRetrieved-b.tRequested);
+  const avgRetrieval = retrievalTimes.length ? retrievalTimes.reduce((a,c)=>a+c,0)/retrievalTimes.length : null;
+
+  const parkedDurations = state.bookings.filter(b=>b.tParked && b.tRetrieved).map(b=>b.tRetrieved-b.tParked);
+  const avgParkedDur = parkedDurations.length ? parkedDurations.reduce((a,c)=>a+c,0)/parkedDurations.length : null;
+
+  const overstayCount = state.bookings.filter(isOverstay).length;
+
+  return `
+  <div class="wrap-wide">
+    ${overstayCount ? `<div class="alert-panel">
+      <h3>${ICON.alert} ${overstayCount} vehicle${overstayCount>1?'s':''} parked over 24 hours — needs attention</h3>
+      ${state.bookings.filter(isOverstay).map(b=>`
+        <div class="alert-row"><span><b>${b.slotLabel}</b> — ${b.carNumber} · ${b.name} · ${b.mobile}</span><span>${fmtDur(Date.now()-b.tParked)} parked</span></div>`).join('')}
+    </div>` : ''}
+
+    <div class="stat-grid">
+      <div class="stat-card"><b>${TOTAL_CAPACITY}</b><span>Total capacity</span></div>
+      <div class="stat-card"><b>${occupied}</b><span>Currently parked</span></div>
+      <div class="stat-card"><b>${avail}</b><span>Slots available</span></div>
+      <div class="stat-card"><b>${utilPct}%</b><span>Utilization now</span></div>
+    </div>
+
+    <div class="zone-bars">
+      <h3 style="margin:0 0 14px;font-size:14.5px;color:var(--blue-900);">Utilization by location</h3>
+      ${ZONES.map(z=>{
+        const occ = active.filter(b=>b.zoneCode===z.code).length;
+        const pct = Math.round((occ/z.capacity)*100);
+        return `<div class="zone-bar-row">
+          <div class="zbr-top"><span><b>${z.label}</b></span><span>${occ} / ${z.capacity} slots</span></div>
+          <div class="zbr-track"><div class="zbr-fill" style="width:${pct}%;"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="m-label">Avg. time to park (booking → parked)</div><div class="m-value">${avgToPark!=null?fmtDur(avgToPark):'—'}</div><div class="m-sub">TAT · check-in efficiency</div></div>
+      <div class="metric-card"><div class="m-label">Avg. retrieval TAT (requested → returned)</div><div class="m-value">${avgRetrieval!=null?fmtDur(avgRetrieval):'—'}</div><div class="m-sub">TAT · pickup responsiveness</div></div>
+      <div class="metric-card"><div class="m-label">Avg. total parked duration</div><div class="m-value">${avgParkedDur!=null?fmtDur(avgParkedDur):'—'}</div><div class="m-sub">Across completed visits</div></div>
+    </div>
+
+    <div class="zone-bars">
+      <h3 style="margin:0 0 14px;font-size:14.5px;color:var(--blue-900);">Average parked duration by location</h3>
+      <table class="dur-table">
+        <thead><tr><th>Location</th><th>Completed visits</th><th>Avg. duration</th></tr></thead>
+        <tbody>
+          ${ZONES.map(z=>{
+            const durs = state.bookings.filter(b=>b.zoneCode===z.code && b.tParked && b.tRetrieved).map(b=>b.tRetrieved-b.tParked);
+            const avg = durs.length ? durs.reduce((a,c)=>a+c,0)/durs.length : null;
+            return `<tr><td data-label="Location">${z.label}</td><td data-label="Visits">${durs.length}</td><td data-label="Avg">${avg!=null?fmtDur(avg):'—'}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="helper" style="margin-top:-8px;">Metrics are computed from all recorded bookings (demo dataset included). Hospital operating hours used: generic 24×7 for this model — tell me the real hours and I'll scope shift-wise views.</div>
+  </div>
+  `;
+}
+
+/* ============================= STAFF ROOT ============================= */
+function renderStaffPortal(){
+  return `
+  <div class="staffbar">
+    ${brandbar(true)}
+    <div class="staff-actions">
+      <button id="btnResetDemo">Reset demo data</button>
+      <button id="btnStaffLogout">Log out</button>
+    </div>
+  </div>
+  <div class="tabbar">
+    <button class="tabbtn ${state.staffTab==='ops'?'active':''}" id="tabOps">Operations</button>
+    <button class="tabbtn ${state.staffTab==='dashboard'?'active':''}" id="tabDash">Dashboard</button>
+  </div>
+  ${state.staffTab==='ops' ? renderOps() : renderDashboard()}
+  `;
+}
+
+/* ============================= MASTER RENDER ============================= */
+function render(){
+  const app = document.getElementById('app');
+  if(!state.loaded){ app.innerHTML = `<div style="padding:60px;text-align:center;color:var(--muted);">Loading…</div>`; return; }
+  if(state.view === 'patient') app.innerHTML = renderPatient();
+  else if(state.view === 'staffLogin') app.innerHTML = renderStaffLogin();
+  else if(state.view === 'staffPortal') app.innerHTML = renderStaffPortal();
+  attachHandlers();
+}
+
+/* ============================= EVENT HANDLERS ============================= */
+function attachHandlers(){
+  const $ = (id) => document.getElementById(id);
+  const on = (id, ev, fn) => { const el = $(id); if(el) el.addEventListener(ev, fn); };
+
+  // ---- Entry ----
+  on('btnStaffLink','click', ()=>{ state.view='staffLogin'; state.staffErr=''; render(); });
+  on('btnBackToPatient','click', ()=>{ state.view='patient'; state.patientStep='mobile'; render(); });
+
+  // ---- Mobile entry ----
+  on('btnSendOtp','click', ()=>{
+    const val = ($('mobileInput').value||'').trim();
+    if(!/^[6-9]\d{9}$/.test(val)){
+      $('mobileErr').style.display='block'; $('mobileErr').textContent='Enter a valid 10-digit mobile number.'; return;
+    }
+    state.mobile = val;
+    // existing active booking for this number?
+    const existing = state.bookings.find(b => b.mobile===val && activeStatuses().includes(b.status));
+    if(existing){
+      state.currentBookingId = existing.id;
+      state.patientStep = 'confirmed';
+      render();
+      return;
+    }
+    _otpMemo = String(Math.floor(1000+Math.random()*9000));
+    state.otpErr='';
+    state.patientStep='otp';
+    render();
+  });
+
+  // ---- OTP ----
+  on('btnBackMobile','click', ()=>{ state.patientStep='mobile'; render(); });
+  on('btnResendOtp','click', ()=>{ _otpMemo = String(Math.floor(1000+Math.random()*9000)); render(); });
+  on('btnVerifyOtp','click', ()=>{
+    const val = ($('otpInput').value||'').trim();
+    if(val !== _otpMemo){ state.otpErr = 'Incorrect code. Please try again.'; render(); return; }
+    state.otpErr=''; state.patientStep='name'; render();
+  });
+
+  // ---- Name / confirm booking ----
+  on('btnBackOtp','click', ()=>{ state.patientStep='otp'; render(); });
+  on('btnConfirmBooking','click', async ()=>{
+    const val = ($('nameInput').value||'').trim();
+    if(val.length < 2){ $('nameErr').style.display='block'; $('nameErr').textContent='Please enter the patient name.'; return; }
+    const slot = assignSlot(state.bookings);
+    if(!slot){ state.patientStep='full'; render(); return; }
+    const booking = {
+      id: uid(), mobile: state.mobile, name: val,
+      zoneCode: slot.zoneCode, zoneLabel: slot.zoneLabel, slotLabel: slot.slotLabel,
+      carNumber: null, status: 'booked',
+      tBooked: Date.now(), tParked: null, tRequested: null, tRetrieved: null,
+    };
+    state.bookings.push(booking);
+    await saveBookings();
+    state.currentBookingId = booking.id;
+    state.patientStep = 'confirmed';
+    render();
+  });
+
+  // ---- Confirmed / tracker ----
+  on('btnRequestCar','click', async ()=>{
+    const b = state.bookings.find(x=>x.id===state.currentBookingId);
+    if(b){ b.tRequested = Date.now(); b.status='requested'; await saveBookings(); render(); }
+  });
+  on('btnNewBooking','click', ()=>{
+    state = {...state, patientStep:'mobile', mobile:'', otp:'', currentBookingId:null};
+    render();
+  });
+  on('btnBackLanding2','click', ()=>{ state.patientStep='mobile'; render(); });
+
+  // ---- Staff login ----
+  on('btnStaffLogin','click', ()=>{
+    const u = ($('staffUser').value||'').trim();
+    const p = ($('staffPin').value||'').trim();
+    if(u===STAFF_USER && p===STAFF_PIN){ state.view='staffPortal'; state.staffTab='ops'; state.staffErr=''; render(); }
+    else { state.staffErr='Incorrect Staff ID or PIN.'; render(); }
+  });
+
+  // ---- Staff portal ----
+  on('btnStaffLogout','click', ()=>{ state.view='patient'; state.patientStep='mobile'; render(); });
+  on('tabOps','click', ()=>{ state.staffTab='ops'; render(); });
+  on('tabDash','click', ()=>{ state.staffTab='dashboard'; render(); });
+  on('btnResetDemo','click', async ()=>{
+    if(!confirm('Reset all demo data? This clears every booking and reseeds sample data.')) return;
+    state.bookings = seedDemoData();
+    await saveBookings();
+    render();
+  });
+  on('searchInput','input', (e)=>{ state.searchQ = e.target.value; });
+  on('searchInput','keyup', (e)=>{ if(e.key==='Enter'){ render(); } });
+  on('showCompleted','change', (e)=>{ state.showCompleted = e.target.checked; render(); });
+
+  document.querySelectorAll('.chip[data-zone]').forEach(el=>{
+    el.addEventListener('click', ()=>{ state.zoneFilter = el.getAttribute('data-zone'); render(); });
+  });
+  document.querySelectorAll('[data-action="startCheckin"]').forEach(el=>{
+    el.addEventListener('click', ()=>{ state.checkinFor = el.getAttribute('data-id'); render(); });
+  });
+  on('btnCancelCheckin','click', ()=>{ state.checkinFor = null; render(); });
+  on('btnConfirmCheckin','click', async (e)=>{
+    const id = e.target.getAttribute('data-id');
+    const carVal = ($('carNumInput').value||'').trim().toUpperCase();
+    if(!carVal) return;
+    const b = state.bookings.find(x=>x.id===id);
+    if(b){ b.carNumber = carVal; b.status='parked'; b.tParked = Date.now(); await saveBookings(); }
+    state.checkinFor = null;
+    render();
+  });
+  document.querySelectorAll('[data-action="checkout"]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const id = el.getAttribute('data-id');
+      const b = state.bookings.find(x=>x.id===id);
+      if(b){
+        if(!b.tRequested) b.tRequested = Date.now();
+        b.tRetrieved = Date.now();
+        b.status = 'retrieved';
+        await saveBookings();
+        render();
+      }
+    });
+  });
+}
+
+/* ============================= INIT ============================= */
+async function init(){
+  await loadBookings();
+  render();
+  setInterval(()=>{
+    if(state.view==='staffPortal' || (state.view==='patient' && state.patientStep==='confirmed')){
+      refreshFromStorage();
+    }
+  }, 12000);
+}
+init();
+</script>
+</body>
+</html>
